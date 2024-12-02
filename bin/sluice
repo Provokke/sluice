@@ -1,0 +1,61 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+
+use Getopt::Long qw(GetOptions);
+use JSON::PP ();
+use Sluice;
+
+my %opt = (top => 10);
+GetOptions(
+    'top=i'    => \$opt{top},
+    'status=i' => \$opt{status},
+    'class=i'  => \$opt{class},
+    'method=s' => \$opt{method},
+    'host=s'   => \$opt{host},
+    'path=s'   => \$opt{path},
+    'json'     => \$opt{json},
+    'help'     => \$opt{help},
+) or exit 2;
+
+if ($opt{help}) {
+    print <<'USAGE';
+usage: sluice [options] [file ...]
+
+  --top N        rows per section (default 10)
+  --status N     only requests with this status code
+  --class N      only requests in this status class (2, 3, 4, 5)
+  --method M     only requests with this method
+  --host H       only requests from this host
+  --path REGEX   only requests whose path matches
+  --json         print the summary as JSON
+
+Reads standard input when no files are given.
+USAGE
+    exit 0;
+}
+
+my %want = map { $_ => $opt{$_} } grep { defined $opt{$_} } qw(status class method host path);
+my $sluice = Sluice->new(filter => %want ? Sluice::make_filter(%want) : undef);
+
+if (@ARGV) {
+    for my $file (@ARGV) {
+        open my $fh, '<', $file or die "sluice: $file: $!\n";
+        $sluice->add_handle($fh);
+        close $fh;
+    }
+}
+else {
+    $sluice->add_handle(\*STDIN);
+}
+
+if ($opt{json}) {
+    print JSON::PP->new->canonical->pretty->encode($sluice->summary($opt{top}));
+}
+else {
+    print $sluice->report($opt{top});
+}
