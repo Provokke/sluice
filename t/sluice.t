@@ -68,3 +68,4 @@ eval { $all->top('nope') };
 like $@, qr/unknown field/, 'unknown field dies';
 
 done_testing;
+
