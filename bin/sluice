@@ -59,4 +59,3 @@ if ($opt{json}) {
 else {
     print $sluice->report($opt{top});
 }
-

@@ -19,4 +19,3 @@ WriteMakefile(
         'Test::More' => '0.98',
     },
 );
-

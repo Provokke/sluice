@@ -107,4 +107,3 @@ hour
 ## Licence
 
 MIT.
-
